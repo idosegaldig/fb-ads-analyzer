@@ -32,23 +32,31 @@ export default function Charts({ data }: Props) {
     );
   };
 
-  // Pie data: budget per campaign
-  const totalSpend = campaigns.reduce((s, c) => s + c.spend, 0);
-  const pieData = campaigns.map((c, i) => ({
-    name: c.campaign_name,
-    value: c.spend,
-    pct: totalSpend > 0 ? ((c.spend / totalSpend) * 100).toFixed(1) : '0',
-    color: CHART_COLORS[i % CHART_COLORS.length],
-  }));
+  // Per-campaign pie data: ads within each campaign
+  const campaignPies = campaigns.map((camp, ci) => {
+    const campAds = ads.filter(a => a.campaign_name === camp.campaign_name && a.spend > 0);
+    const campTotal = campAds.reduce((s, a) => s + a.spend, 0);
+    return {
+      campaign_name: camp.campaign_name,
+      campTotal,
+      color: CHART_COLORS[ci % CHART_COLORS.length],
+      slices: campAds.map((a, ai) => ({
+        name: a.display_name,
+        value: a.spend,
+        pct: campTotal > 0 ? ((a.spend / campTotal) * 100).toFixed(1) : '0',
+        color: CHART_COLORS[ai % CHART_COLORS.length],
+      })),
+    };
+  }).filter(cp => cp.slices.length > 0);
 
   const PieTooltip = ({ active, payload }: any) => {
     if (!active || !payload?.length) return null;
     const d = payload[0].payload;
     return (
-      <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 14px', boxShadow: '0 4px 16px rgba(0,0,0,0.08)', fontSize: 13 }}>
-        <p style={{ fontWeight: 600, color: 'var(--navy)', marginBottom: 4, maxWidth: 220 }}>{d.name}</p>
-        <p style={{ color: 'var(--blue)' }}>Spend: {sym}{d.value.toLocaleString('en', { maximumFractionDigits: 0 })}</p>
-        <p style={{ color: 'var(--ink-muted)' }}>Share: {d.pct}% of budget</p>
+      <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 14px', boxShadow: '0 4px 16px rgba(0,0,0,0.1)', fontSize: 12, maxWidth: 220 }}>
+        <p style={{ fontWeight: 600, color: 'var(--navy)', marginBottom: 3 }}>{d.name}</p>
+        <p style={{ color: 'var(--blue)' }}>Spend: {sym}{(d.value as number).toLocaleString('en', { maximumFractionDigits: 0 })}</p>
+        <p style={{ color: 'var(--ink-muted)' }}>Share: {d.pct}% of campaign</p>
       </div>
     );
   };
@@ -104,37 +112,61 @@ export default function Charts({ data }: Props) {
         )}
       </div>
 
-      {/* Budget Split Pie — Campaign Level */}
-      <div className="chart-wrap fade-up fade-up-3">
-        <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--navy)', marginBottom: 16, letterSpacing: '0.02em' }}>
-          Budget Distribution by Campaign
+      {/* Budget Distribution — one donut per campaign, ads as slices */}
+      <div className="chart-wrap fade-up fade-up-3" style={{ gridColumn: 'span 2' }}>
+        <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--navy)', marginBottom: 20, letterSpacing: '0.02em' }}>
+          Budget Distribution by Ad — per Campaign
         </h3>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <ResponsiveContainer width={220} height={220}>
-            <PieChart>
-              <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={2} dataKey="value" stroke="none">
-                {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-              </Pie>
-              <Tooltip content={<PieTooltip />} />
-            </PieChart>
-          </ResponsiveContainer>
-          {/* Legend */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {pieData.map((d) => (
-              <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ flexShrink: 0, width: 10, height: 10, borderRadius: 3, background: d.color }} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 12, fontWeight: 500, color: 'var(--ink-soft)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</p>
-                  <p style={{ fontSize: 11, color: 'var(--ink-faint)' }}>{sym}{d.value.toLocaleString('en', { maximumFractionDigits: 0 })} · {d.pct}%</p>
+        {campaignPies.length === 0 ? (
+          <p style={{ color: 'var(--ink-faint)', textAlign: 'center', padding: '40px 0', fontSize: 13 }}>No spend data</p>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 28 }}>
+            {campaignPies.map((cp) => (
+              <div key={cp.campaign_name}>
+                {/* Campaign label */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: 2, background: cp.color, flexShrink: 0 }} />
+                  <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--navy)', letterSpacing: '0.06em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {cp.campaign_name}
+                  </p>
+                  <span style={{ fontSize: 11, color: 'var(--ink-faint)', flexShrink: 0 }}>
+                    {sym}{cp.campTotal.toLocaleString('en', { maximumFractionDigits: 0 })}
+                  </span>
                 </div>
-                {/* Mini bar */}
-                <div style={{ width: 60, height: 4, background: 'var(--surface-2)', borderRadius: 2, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${d.pct}%`, background: d.color, borderRadius: 2 }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  {/* Donut */}
+                  <div style={{ flexShrink: 0 }}>
+                    <PieChart width={160} height={160}>
+                      <Pie
+                        data={cp.slices}
+                        cx={75} cy={75}
+                        innerRadius={46} outerRadius={72}
+                        paddingAngle={2}
+                        dataKey="value"
+                        stroke="none"
+                      >
+                        {cp.slices.map((s, i) => <Cell key={i} fill={s.color} />)}
+                      </Pie>
+                      <Tooltip content={<PieTooltip />} />
+                    </PieChart>
+                  </div>
+                  {/* Legend */}
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 7, minWidth: 0 }}>
+                    {cp.slices.map((s) => (
+                      <div key={s.name} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                        <span style={{ flexShrink: 0, width: 8, height: 8, borderRadius: 2, background: s.color }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--ink-soft)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</p>
+                          <p style={{ fontSize: 10.5, color: 'var(--ink-faint)' }}>{sym}{(s.value).toLocaleString('en', { maximumFractionDigits: 0 })} · {s.pct}%</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        )}
       </div>
 
       {/* Campaign: Results vs Spend scatter */}
