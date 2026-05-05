@@ -41,17 +41,18 @@ export default function Home() {
   }, [processFile]);
 
   const downloadPDF = async () => {
-    if (!csvFile) return;
+    if (!data) return;
     setPdfLoading(true);
+    setError('');
     try {
-      const fd = new FormData(); fd.append('csv', csvFile); fd.append('title', 'Campaign Performance Report');
-      const res = await fetch('/api/generate-pdf', { method: 'POST', body: fd });
-      if (!res.ok) throw new Error('Generation failed');
-      const blob = await res.blob();
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-      a.download = fileName.replace('.csv', '-report.pdf'); a.click();
-    } catch { setError('PDF generation failed — ensure Python deps are installed.'); }
-    finally { setPdfLoading(false); }
+      const { generatePDF } = await import('@/lib/generate-pdf-client');
+      await generatePDF(data, fileName);
+    } catch (err: any) {
+      setError('PDF generation failed — please try again.');
+      console.error(err);
+    } finally {
+      setPdfLoading(false);
+    }
   };
 
   const reset = () => { setData(null); setFileName(''); setError(''); setCsvFile(null); if (fileRef.current) fileRef.current.value = ''; };
