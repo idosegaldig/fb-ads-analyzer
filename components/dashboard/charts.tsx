@@ -1,7 +1,7 @@
 'use client';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  ScatterChart, Scatter, Cell, Legend,
+  ScatterChart, Scatter, Cell, PieChart, Pie,
 } from 'recharts';
 import type { ParsedData } from '@/lib/types';
 import { CHART_COLORS } from '@/lib/types';
@@ -28,6 +28,27 @@ export default function Charts({ data }: Props) {
         {d.cpr > 0 && <p style={{ color: 'var(--emerald)' }}>CPR: {sym}{d.cpr.toFixed(2)}</p>}
         {d.results > 0 && <p style={{ color: 'var(--blue)' }}>Results: {formatNum(d.results)}</p>}
         {d.spend > 0 && <p style={{ color: 'var(--ink-soft)' }}>Spend: {sym}{d.spend.toFixed(0)}</p>}
+      </div>
+    );
+  };
+
+  // Pie data: budget per campaign
+  const totalSpend = campaigns.reduce((s, c) => s + c.spend, 0);
+  const pieData = campaigns.map((c, i) => ({
+    name: c.campaign_name,
+    value: c.spend,
+    pct: totalSpend > 0 ? ((c.spend / totalSpend) * 100).toFixed(1) : '0',
+    color: CHART_COLORS[i % CHART_COLORS.length],
+  }));
+
+  const PieTooltip = ({ active, payload }: any) => {
+    if (!active || !payload?.length) return null;
+    const d = payload[0].payload;
+    return (
+      <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 14px', boxShadow: '0 4px 16px rgba(0,0,0,0.08)', fontSize: 13 }}>
+        <p style={{ fontWeight: 600, color: 'var(--navy)', marginBottom: 4, maxWidth: 220 }}>{d.name}</p>
+        <p style={{ color: 'var(--blue)' }}>Spend: {sym}{d.value.toLocaleString('en', { maximumFractionDigits: 0 })}</p>
+        <p style={{ color: 'var(--ink-muted)' }}>Share: {d.pct}% of budget</p>
       </div>
     );
   };
@@ -83,8 +104,41 @@ export default function Charts({ data }: Props) {
         )}
       </div>
 
+      {/* Budget Split Pie — Campaign Level */}
+      <div className="chart-wrap fade-up fade-up-3">
+        <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--navy)', marginBottom: 16, letterSpacing: '0.02em' }}>
+          Budget Distribution by Campaign
+        </h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <ResponsiveContainer width={220} height={220}>
+            <PieChart>
+              <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={2} dataKey="value" stroke="none">
+                {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+              </Pie>
+              <Tooltip content={<PieTooltip />} />
+            </PieChart>
+          </ResponsiveContainer>
+          {/* Legend */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {pieData.map((d) => (
+              <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ flexShrink: 0, width: 10, height: 10, borderRadius: 3, background: d.color }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 12, fontWeight: 500, color: 'var(--ink-soft)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</p>
+                  <p style={{ fontSize: 11, color: 'var(--ink-faint)' }}>{sym}{d.value.toLocaleString('en', { maximumFractionDigits: 0 })} · {d.pct}%</p>
+                </div>
+                {/* Mini bar */}
+                <div style={{ width: 60, height: 4, background: 'var(--surface-2)', borderRadius: 2, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${d.pct}%`, background: d.color, borderRadius: 2 }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Campaign: Results vs Spend scatter */}
-      <div className="chart-wrap fade-up fade-up-3" style={{ gridColumn: 'span 2' }}>
+      <div className="chart-wrap fade-up fade-up-4">
         <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--navy)', marginBottom: 16, letterSpacing: '0.02em' }}>
           Campaigns — Results vs. Spend
         </h3>

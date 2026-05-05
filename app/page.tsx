@@ -66,15 +66,18 @@ export default function Home() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <header style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', position: 'sticky', top: 0, zIndex: 50 }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <Image src="/logo.png" alt="Ido Segal Studio" width={36} height={36} style={{ objectFit: 'contain' }} />
-            <div>
-              <p className="font-display" style={{ fontSize: 18, fontWeight: 600, color: 'var(--navy)', lineHeight: 1.1 }}>FB Ads Analyzer</p>
-              <p style={{ fontSize: 10, color: 'var(--ink-faint)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Ido Segal Studio</p>
-            </div>
-          </div>
+        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px', height: 60, display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center' }}>
+          {/* Left: Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Image src="/logo.png" alt="Ido Segal Studio" width={38} height={38} style={{ objectFit: 'contain' }} />
+          </div>
+          {/* Center: Title */}
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-faint)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 1 }}>Ido Segal Studio</p>
+            <p className="font-display" style={{ fontSize: 19, fontWeight: 500, color: 'var(--navy)', lineHeight: 1.05, letterSpacing: '0.01em' }}>Meta Ads Analyzer</p>
+          </div>
+          {/* Right: Actions */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'flex-end' }}>
             {data && (
               <>
                 <button onClick={reset} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--ink-muted)', fontSize: 13, cursor: 'pointer' }}>

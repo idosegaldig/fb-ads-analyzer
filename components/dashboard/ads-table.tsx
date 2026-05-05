@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import type { AdSummary } from '@/lib/types';
 import { formatNum, formatCPR, formatSpend } from '@/lib/parse-csv';
 
@@ -6,6 +7,7 @@ interface Props { ads: AdSummary[]; currency: string; }
 
 export default function AdsTable({ ads, currency }: Props) {
   const curr = currency === 'NIS' ? 'NIS' : 'USD';
+  const [hoveredAd, setHoveredAd] = useState<string | null>(null);
 
   // Group by campaign then adset
   const grouped: Record<string, Record<string, AdSummary[]>> = {};
@@ -41,14 +43,28 @@ export default function AdsTable({ ads, currency }: Props) {
                   <tr key={`s-${camp}-${adset}`} className="subsection-header">
                     <td colSpan={6}>{adset}</td>
                   </tr>
-                  {adList.map((a, i) => (
-                    <tr key={`${a.campaign_name}-${a.adset_name}-${a.ad_name}-${i}`}
-                        style={{ background: a.cpr === bestCPR && a.cpr > 0 ? '#F0FDF4' : undefined }}>
-                      <td style={{ fontWeight: 500, color: 'var(--ink)', maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {a.cpr === bestCPR && a.cpr > 0 && (
-                          <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: 'var(--emerald)', marginRight: 7, verticalAlign: 'middle' }} />
+                  {adList.map((a, i) => {
+                    const rowKey = `${a.campaign_name}-${a.adset_name}-${a.ad_name}-${i}`;
+                    const isHovered = hoveredAd === rowKey;
+                    return (
+                    <tr key={rowKey}
+                        style={{ background: a.cpr === bestCPR && a.cpr > 0 ? '#F0FDF4' : undefined, position: 'relative' }}
+                        onMouseEnter={() => setHoveredAd(rowKey)}
+                        onMouseLeave={() => setHoveredAd(null)}>
+                      <td style={{ fontWeight: 500, color: 'var(--ink)', maxWidth: 260, position: 'relative' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7, overflow: 'hidden' }}>
+                          {a.cpr === bestCPR && a.cpr > 0 && (
+                            <span style={{ flexShrink: 0, width: 6, height: 6, borderRadius: '50%', background: 'var(--emerald)' }} />
+                          )}
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.display_name}</span>
+                        </div>
+                        {/* Campaign tooltip on hover */}
+                        {isHovered && (
+                          <div style={{ position: 'absolute', left: 0, top: '100%', zIndex: 50, background: 'var(--navy)', color: 'white', fontSize: 11.5, fontWeight: 500, padding: '6px 12px', borderRadius: 7, whiteSpace: 'nowrap', boxShadow: '0 4px 16px rgba(0,0,0,0.15)', pointerEvents: 'none', marginTop: 4 }}>
+                            <span style={{ opacity: 0.65, fontSize: 10, display: 'block', marginBottom: 1, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Campaign</span>
+                            {a.campaign_name}
+                          </div>
                         )}
-                        {a.display_name}
                       </td>
                       <td style={{ textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', fontSize: 13 }}>{formatNum(a.reach)}</td>
                       <td style={{ textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', fontSize: 13 }}>
@@ -60,7 +76,7 @@ export default function AdsTable({ ads, currency }: Props) {
                       </td>
                       <td style={{ textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', fontSize: 13, fontWeight: 600, color: 'var(--navy)' }}>{formatSpend(a.spend, curr)}</td>
                     </tr>
-                  ))}
+                  );})}
                 </>
               ))}
             </>
