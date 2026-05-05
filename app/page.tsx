@@ -66,18 +66,18 @@ export default function Home() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <header style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', position: 'sticky', top: 0, zIndex: 50 }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px', height: 60, display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center' }}>
-          {/* Left: Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px', height: 64, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {/* Center: Logo + Title on one line */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <Image src="/logo.png" alt="Ido Segal Studio" width={38} height={38} style={{ objectFit: 'contain' }} />
+            <p style={{ fontFamily: "'Bodoni Moda', Georgia, serif", fontSize: 20, fontWeight: 500, color: 'var(--navy)', letterSpacing: '0.04em', whiteSpace: 'nowrap', lineHeight: 1 }}>
+              <span style={{ fontSize: 12, fontWeight: 400, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-faint)', fontFamily: "'Bodoni Moda', Georgia, serif" }}>IDO SEGAL STUDIO</span>
+              <span style={{ margin: '0 10px', color: 'var(--border)', fontWeight: 300 }}>|</span>
+              Meta Ads Analyzer
+            </p>
           </div>
-          {/* Center: Title */}
-          <div style={{ textAlign: 'center' }}>
-            <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-faint)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 1 }}>Ido Segal Studio</p>
-            <p className="font-display" style={{ fontSize: 19, fontWeight: 500, color: 'var(--navy)', lineHeight: 1.05, letterSpacing: '0.01em' }}>Meta Ads Analyzer</p>
-          </div>
-          {/* Right: Actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'flex-end' }}>
+          {/* Right: Actions — absolute so they don't shift the center */}
+          <div style={{ position: 'absolute', right: 24, display: 'flex', alignItems: 'center', gap: 10 }}>
             {data && (
               <>
                 <button onClick={reset} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--ink-muted)', fontSize: 13, cursor: 'pointer' }}>
